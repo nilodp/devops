@@ -1,4 +1,6 @@
 from fastapi import FastAPI
+from fastapi.exceptions import HTTPException
+
 from datetime import datetime
 
 import requests
@@ -65,14 +67,15 @@ def listar_tarefa_especifica(id: int):
 #       - Retorna "OK" se a tarefa foi criada
 #       - Se a tarefa existir, retornar "TAREFA JÁ EXISTE"
 
-@APP.post("/tarefas")
+@APP.post("/tarefas", status_code=201)
 def criar_tarefa(id: int, titulo: str, descricao: str):
     global LISTA_TAREFAS
 
     tarefa_existe = verificar_existencia_tarefa(id)
 
     if tarefa_existe:
-        return {"mensagem": "TAREFA JÁ EXISTE!"}
+        ex = HTTPException(status_code=202, detail={"mensagem": "TAREFA JÁ EXISTE!"})
+        raise ex
     
     nova = nova_tarefa(id, titulo, descricao)
 
@@ -109,7 +112,7 @@ def atualizar_tarefa(id: int, titulo: str = "", descricao: str = "", concluido: 
     if titulo != "":
         LISTA_TAREFAS[indice]['titulo'] = titulo
     
-    if descricao !=  "": 
+    if descricao !=  "":
         LISTA_TAREFAS[indice]['descricao'] = descricao
     
     if concluido == True:
