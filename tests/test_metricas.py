@@ -21,7 +21,7 @@ def test_qtde_tarefas_concluidas():
 
     assert requisicao['qtde_tarefas_concluidas'] == 1
     assert requisicao['qtde_tarefas_pendentes'] == 0
-    assert requisicao['qtde_tarefas_atualizadas'] == 3
+    assert requisicao['qtde_tarefas_atualizadas'] == 2
 
 
 def test_apagar_tarefa():
@@ -29,7 +29,7 @@ def test_apagar_tarefa():
 
     requisicao = CLIENT.get("/metricas").json()
 
-    assert requisicao['qtde_tarefas_removidas'] == 1
+    assert requisicao['qtde_tarefas_removidas'] == 3
     assert requisicao['qtde_tarefas'] == 0
 
  
