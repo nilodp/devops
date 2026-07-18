@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.exceptions import HTTPException
 
-from datetime import datetime
+from datetime import datetime, timedelta
 
 import requests
 import logging
@@ -174,10 +174,10 @@ def atualizar_tarefa(id: int, titulo: str = "", descricao: str = "", concluido: 
         METRICAS['qtde_tarefas_concluidas'] += 1
         LISTA_TAREFAS[indice]['concluido_em'] = datetime.now()
 
-        requests.post(
-            f"http://notificacoes:8000/notificar?titulo={tarefa['titulo']}&data_finalizacao={datetime.now()}",
-            timeout=10
-        )
+        # requests.post(
+        #     f"http://notificacoes:8000/notificar?titulo={tarefa['titulo']}&data_finalizacao={datetime.now()}",
+        #     timeout=10
+        # )
 
     LISTA_TAREFAS[indice]['concluido'] = concluido
 
@@ -222,6 +222,7 @@ def apagar_tarefa(id: int):
     LOGGER.info(f"Rota DELETE '/tarefas/{id}' acessada. Tarefa id={id} removida.")
     
     METRICAS['qtde_tarefas_removidas'] += 1
+    METRICAS['qtde_tarefas'] -= 1
 
     return {"mensagem": "OK"}
 
@@ -241,15 +242,22 @@ def apagar_tarefa(id: int):
 #    - Incluir log de acesso à rota! (LOGGER.info)
 @APP.get("/metricas")
 def metricas():
-    tempo_medio_total = 0
+    tempo_medio_total = timedelta()
     
     for tarefa in LISTA_TAREFAS:
         if tarefa['concluido']:
             tempo_medio = tarefa['concluido_em'] - tarefa['criado_em']
             tempo_medio_total += tempo_medio
 
-    METRICAS['tempo_medio_conclusao_tafefa'] = tempo_medio_total / METRICAS['qtde_tarefas_concluidas']
+    if METRICAS['qtde_tarefas_concluidas'] > 0:
+        METRICAS['tempo_medio_conclusao_tarefa'] = tempo_medio_total / METRICAS['qtde_tarefas_concluidas']
     
+    LOGGER.debug(METRICAS)
     LOGGER.info("Rota '/metricas' acessada.")
 
     return METRICAS
+
+@APP.get("/health")
+def health():
+    LOGGER.info("Rota '/metricas' acessada.")
+    return {"mensagem": "healthy"}

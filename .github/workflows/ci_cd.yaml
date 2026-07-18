@@ -24,8 +24,18 @@ jobs:
         run: bandit -r app/
       - name: 'Linting'
         run: pylint app/ || true
-  entrega:
+  fossa:
     needs: integracao
+    name: 'Análise de dependências e conformidade'
+    runs-on: self-hosted
+    steps:
+      - uses: actions/checkout@v4
+      - name: 'FOSSA'
+        uses: fossas/fossa-action@main
+        with:
+          FOSSA_API_KEY: ${{ secrets.FOSSA_API_KEY }}
+  entrega:
+    needs: [integracao, fossa]
     name: 'Entrega'
     runs-on: ubuntu-latest
     steps:
@@ -44,3 +54,11 @@ jobs:
         with:
           push: true
           tags: ${{ vars.DOCKERHUB_USERNAME }}/curso-devops:latest
+  implantacao:
+    runs-on: self-hosted
+    needs: entrega
+    name: 'Implantação'
+    steps:
+      - uses: actions/checkout@v4
+      - name: 'Aplicação do manifesto'
+        run: kubectl delete -f deployment.yaml && kubectl apply -f deployment.yaml
